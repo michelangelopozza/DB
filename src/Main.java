@@ -8,11 +8,12 @@ public class Main {
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/batterie";
         String user = "root";
-        String password = "Pordenone";
+        String password = "";
 
         try {
             Connection mydb = DriverManager.getConnection(url, user, password);
 
+            // prova di utilizzo di una SP
             int anno = 2022;
             String sql = "CALL numeroAutoProdottePerAnno("+anno+")";
             PreparedStatement mycursor = mydb.prepareStatement(sql);
