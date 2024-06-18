@@ -209,26 +209,6 @@ INSERT INTO Performance (cod, Q, P, Z_in) VALUES
 ('DT005', 4700, 295, 0.019);
 
 DELIMITER $$
-CREATE TRIGGER aggiornaStato
-AFTER INSERT ON Performance
-FOR EACH ROW
-BEGIN
-    DECLARE testState VARCHAR(255);
-
-    SELECT stato INTO testState
-    FROM DiagnosticTest
-    WHERE cod = NEW.cod;
-
-    IF testState = 'in corso' THEN
-        UPDATE DiagnosticTest
-        SET stato = 'terminato'
-        WHERE cod = NEW.cod;
-    END IF;
-END $$
-
-DELIMITER ;
-
-DELIMITER $$
 
 CREATE TRIGGER controlloStatoTest
 AFTER INSERT ON Performance
@@ -272,10 +252,11 @@ BEGIN
 
     IF batteryInUse > 0 THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Errore: La batteria è già impegnata in un altro test "in corso"';
+        SET MESSAGE_TEXT = 'Errore: La batteria è già impegnata in un altro test in corso';
     END IF;
 END $$
 DELIMITER ;
+
 
 DELIMITER $$
 
@@ -328,14 +309,11 @@ DELIMITER $$
 
 CREATE PROCEDURE operatoriLiberi()
 BEGIN
-    -- Seleziona operatori liberi
     SELECT o.id, o.nome, o.cognome
     FROM Operatore o
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM DiagnosticTest dt
-        WHERE dt.idOperatore = o.id AND dt.aziendaOperatore = o.azienda AND dt.stato = 'in corso'
-    );
+    LEFT JOIN DiagnosticTest dt
+    ON o.id = dt.idOperatore AND o.azienda = dt.aziendaOperatore AND dt.stato = 'in corso'
+    WHERE dt.idOperatore IS NULL;
 END $$
 
 DELIMITER ;
